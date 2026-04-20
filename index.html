@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="preload" as="image" href="images/image.png" />
+  <link rel="preload" as="image" href="images/image.png" fetchpriority="high" />
   <link rel="stylesheet" href="styles.css" />
   <script>document.documentElement.classList.add("js");</script>
 </head>
@@ -48,6 +48,8 @@
               class="hero-slide-img"
               src="images/image.png"
               alt=""
+              width="1920"
+              height="1080"
               fetchpriority="high"
               decoding="async"
             />
@@ -57,6 +59,8 @@
               class="hero-slide-img"
               src="images/image copy.png"
               alt=""
+              width="1920"
+              height="1080"
               loading="lazy"
               decoding="async"
             />
@@ -66,6 +70,8 @@
               class="hero-slide-img"
               src="images/image copy 2.png"
               alt=""
+              width="1920"
+              height="1080"
               loading="lazy"
               decoding="async"
             />
@@ -273,31 +279,31 @@
       <div class="payment-methods" role="group" aria-label="Payment options">
         <button type="button" class="payment-method-btn" data-method="debit">
           <span class="payment-method-logo" aria-hidden="true">
-            <img src="images/payment/debit-card.svg" width="40" height="40" alt="" decoding="async" />
+            <img src="images/payment/debit-card.svg" width="40" height="40" alt="" loading="lazy" decoding="async" />
           </span>
           <span class="payment-method-label">Debit card</span>
         </button>
         <button type="button" class="payment-method-btn" data-method="chime">
           <span class="payment-method-logo" aria-hidden="true">
-            <img src="images/payment/chime.svg" width="40" height="40" alt="" decoding="async" />
+            <img src="images/payment/chime.svg" width="40" height="40" alt="" loading="lazy" decoding="async" />
           </span>
           <span class="payment-method-label">Chime</span>
         </button>
         <button type="button" class="payment-method-btn" data-method="applepay">
           <span class="payment-method-logo payment-method-logo--wide" aria-hidden="true">
-            <img src="images/payment/apple-pay.svg" width="88" height="32" alt="" decoding="async" />
+            <img src="images/payment/apple-pay.svg" width="88" height="32" alt="" loading="lazy" decoding="async" />
           </span>
           <span class="payment-method-label">Apple Pay</span>
         </button>
         <button type="button" class="payment-method-btn" data-method="zelle">
           <span class="payment-method-logo" aria-hidden="true">
-            <img src="images/payment/zelle.svg" width="40" height="40" alt="" decoding="async" />
+            <img src="images/payment/zelle.svg" width="40" height="40" alt="" loading="lazy" decoding="async" />
           </span>
           <span class="payment-method-label">Zelle</span>
         </button>
         <button type="button" class="payment-method-btn" data-method="bank">
           <span class="payment-method-logo" aria-hidden="true">
-            <img src="images/payment/bank-transfer.svg" width="40" height="40" alt="" decoding="async" />
+            <img src="images/payment/bank-transfer.svg" width="40" height="40" alt="" loading="lazy" decoding="async" />
           </span>
           <span class="payment-method-label">Bank transfer</span>
         </button>
@@ -305,6 +311,6 @@
     </div>
   </dialog>
 
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>

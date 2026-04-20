@@ -577,6 +577,12 @@ html.js .hero-slide.is-active .hero-slide-img {
   padding: var(--section-y) 0;
 }
 
+/* Faster initial paint: browser skips off-screen layout work until needed */
+.section:not(.hero) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+
 .section-header {
   text-align: center;
   max-width: 640px;
