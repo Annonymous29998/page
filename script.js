@@ -561,8 +561,8 @@
     headerObs.observe(heroSection);
   }
 
-  /* --- Total raised (see data/total-raised.json; update totalUsd when you deploy) --- */
-  var TOTAL_RAISED_FALLBACK_USD = 0;
+  /* Total raised: load /data/total-raised.json (must be in repo). Fallback if fetch fails. */
+  var TOTAL_RAISED_FALLBACK_USD = 10000;
   var totalRaisedNumberEl = document.getElementById("total-raised-number");
   var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
   var totalRaisedSection = document.getElementById("total-raised");
@@ -639,7 +639,7 @@
     }
   }
 
-  fetch("data/total-raised.json", { cache: "no-store" })
+  fetch("/data/total-raised.json", { cache: "no-store" })
     .then(function (res) {
       if (!res.ok) throw new Error("bad");
       return res.json();
