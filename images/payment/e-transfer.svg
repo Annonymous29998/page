@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-hidden="true">
+  <rect width="48" height="48" rx="10" fill="#0a5f73"/>
+  <text x="19" y="32" font-family="system-ui,-apple-system,sans-serif" font-size="22" font-weight="700" fill="#fff">e</text>
+  <path fill="none" stroke="#9fd4e8" stroke-width="2" stroke-linecap="round" d="M28 28h10M33 24l4 4-4 4"/>
+</svg>
