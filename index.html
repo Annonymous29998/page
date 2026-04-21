@@ -118,13 +118,13 @@
       </div>
     </section>
 
-    <!-- Total auto-grows in script.js: +data-total-step-usd every data-total-step-days from data-total-base-date (YYYY-MM-DD). -->
+    <!-- Schedule: +data-total-step-usd every data-total-step-days from data-total-base-date (local midnight). Use a date on or before “today”; if it’s in the future, script falls back so the total still grows. -->
     <section
       id="total-raised"
       class="section"
       aria-labelledby="total-raised-heading"
       data-total-base-usd="10000"
-      data-total-base-date="2026-04-18"
+      data-total-base-date="2026-04-19"
       data-total-step-usd="300"
       data-total-step-days="2"
       style="padding: clamp(2.5rem, 6vw, 3.5rem) 0; background: linear-gradient(165deg, rgba(26, 35, 50, 0.06) 0%, rgba(196, 92, 38, 0.08) 50%, rgba(201, 162, 39, 0.06) 100%); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);"
@@ -147,7 +147,7 @@
             <span
               id="total-raised-number"
               style="font-family: var(--font-display); font-weight: 700; font-size: clamp(2.75rem, 8vw, 4.25rem); letter-spacing: -0.03em; line-height: 1; display: inline-block; background: linear-gradient(135deg, var(--bg-deep) 0%, var(--accent) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;"
-              >10,000</span>
+              >10,300</span>
           </p>
           <p id="total-raised-subtitle" style="margin: 0 0 1rem; font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; color: var(--text);">
             Raised together for youth baseball &amp; cancer research
@@ -354,6 +354,6 @@
     </div>
   </dialog>
 
-  <script src="script.js" defer></script>
+  <script src="script.js?v=20260422" defer></script>
 </body>
 </html>

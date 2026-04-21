@@ -586,6 +586,13 @@
     return dt;
   }
 
+  function shiftLocalMidnightByDays(date, dayDelta) {
+    var d = new Date(date.getTime());
+    d.setHours(0, 0, 0, 0);
+    d.setTime(d.getTime() + dayDelta * MS_PER_DAY);
+    return d;
+  }
+
   function getScheduleTotalRaisedUsd(section) {
     if (!section) return TOTAL_RAISED_FALLBACK_BASE_USD;
     var baseUsd = parseInt(section.getAttribute("data-total-base-usd"), 10);
@@ -594,13 +601,28 @@
     if (isNaN(stepUsd) || stepUsd < 0) stepUsd = 300;
     var stepDays = parseFloat(section.getAttribute("data-total-step-days"), 10);
     if (isNaN(stepDays) || stepDays <= 0) stepDays = 2;
-    var baseDay = parseLocalDateYmd(section.getAttribute("data-total-base-date"));
-    if (!baseDay) return baseUsd;
-    var elapsed = Date.now() - baseDay.getTime();
-    if (elapsed < 0) return baseUsd;
     var stepMs = stepDays * MS_PER_DAY;
+    var rawDate = (section.getAttribute("data-total-base-date") || "").trim();
+    var baseDay = rawDate ? parseLocalDateYmd(rawDate) : null;
+    var now = Date.now();
+    if (!baseDay) {
+      /* No date: anchor one full step in the past so the schedule always shows at least one increment. */
+      baseDay = shiftLocalMidnightByDays(new Date(), -stepDays);
+    } else if (now < baseDay.getTime()) {
+      /* Base date is still in the future (wrong year, typo, etc.): same anchor so totals aren’t stuck at base. */
+      baseDay = shiftLocalMidnightByDays(new Date(), -stepDays);
+    }
+    var elapsed = now - baseDay.getTime();
+    if (elapsed < 0) return baseUsd;
     var periods = Math.floor(elapsed / stepMs);
     return baseUsd + periods * stepUsd;
+  }
+
+  function totalRaisedSectionLikelyVisible() {
+    if (!totalRaisedSection) return false;
+    var r = totalRaisedSection.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    return r.top < vh && r.bottom > 0;
   }
 
   function cancelTotalRaisedAnimation() {
@@ -658,7 +680,7 @@
     }
 
     if ("IntersectionObserver" in window) {
-      new IntersectionObserver(
+      var totalIo = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting) {
@@ -673,8 +695,16 @@
             }
           });
         },
-        { threshold: 0, rootMargin: "0px 0px 12% 0px" }
-      ).observe(totalRaisedSection);
+        { threshold: 0, rootMargin: "80px 0px 20% 0px" }
+      );
+      totalIo.observe(totalRaisedSection);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          if (totalRaisedSectionLikelyVisible()) {
+            runTotalRaisedCountUp(getScheduleTotalRaisedUsd(totalRaisedSection));
+          }
+        });
+      });
     } else {
       runTotalRaisedCountUp(getScheduleTotalRaisedUsd(totalRaisedSection));
     }
