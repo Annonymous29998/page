@@ -561,16 +561,15 @@
     headerObs.observe(heroSection);
   }
 
-  /* Total raised: load /data/total-raised.json (must be in repo). Fallback if fetch fails. */
-  var TOTAL_RAISED_FALLBACK_USD = 10000;
+  /* Total raised: data-total-usd / data-total-subtitle on #total-raised in index.html */
+  var TOTAL_RAISED_DEFAULT_USD = 10000;
+  var totalRaisedSection = document.getElementById("total-raised");
   var totalRaisedNumberEl = document.getElementById("total-raised-number");
   var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
-  var totalRaisedSection = document.getElementById("total-raised");
-  var totalRaisedTargetValue = 0;
   var totalRaisedRafId = null;
 
-  function formatUsdInteger(n) {
-    return Math.max(0, Math.round(Number(n))).toLocaleString("en-US");
+  function formatUsdInteger(num) {
+    return Math.max(0, Math.round(Number(num))).toLocaleString("en-US");
   }
 
   function cancelTotalRaisedAnimation() {
@@ -580,7 +579,7 @@
     }
   }
 
-  function runTotalRaisedAnimation(target) {
+  function runTotalRaisedCountUp(target) {
     if (!totalRaisedNumberEl) return;
     cancelTotalRaisedAnimation();
 
@@ -592,16 +591,14 @@
       return;
     }
 
-    var duration = 850;
+    var duration = 900;
     var startTs = null;
-    var from = 0;
 
     function frame(ts) {
       if (startTs === null) startTs = ts;
-      var elapsed = ts - startTs;
-      var t = Math.min(elapsed / duration, 1);
+      var t = Math.min((ts - startTs) / duration, 1);
       var eased = 1 - Math.pow(1 - t, 3);
-      var val = Math.round(from + (target - from) * eased);
+      var val = Math.round(target * eased);
       totalRaisedNumberEl.textContent = formatUsdInteger(val);
       if (t < 1) {
         totalRaisedRafId = requestAnimationFrame(frame);
@@ -609,38 +606,38 @@
         totalRaisedRafId = null;
       }
     }
+
+    totalRaisedNumberEl.textContent = formatUsdInteger(0);
     totalRaisedRafId = requestAnimationFrame(frame);
   }
 
-  function totalRaisedIsInView() {
-    if (!totalRaisedSection) return false;
-    var r = totalRaisedSection.getBoundingClientRect();
-    var h = window.innerHeight || document.documentElement.clientHeight;
-    return r.top < h && r.bottom > 0;
-  }
-
-  function initTotalRaisedDisplay(totalUsd, subtitle) {
-    totalRaisedTargetValue = totalUsd;
-    if (totalRaisedSubtitleEl && subtitle) {
-      totalRaisedSubtitleEl.textContent = subtitle;
-    }
+  function initTotalRaisedFromDom() {
     if (!totalRaisedSection || !totalRaisedNumberEl) return;
+    var raw = totalRaisedSection.getAttribute("data-total-usd");
+    var n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0) n = TOTAL_RAISED_DEFAULT_USD;
+    var sub = totalRaisedSection.getAttribute("data-total-subtitle");
+    if (totalRaisedSubtitleEl && sub && sub.trim()) {
+      totalRaisedSubtitleEl.textContent = sub.trim();
+    }
 
-    function runIfInView() {
-      if (totalRaisedIsInView()) {
-        runTotalRaisedAnimation(totalRaisedTargetValue);
-      }
+    var reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      totalRaisedNumberEl.textContent = formatUsdInteger(n);
+      return;
     }
 
     if ("IntersectionObserver" in window) {
-      var totalIo = new IntersectionObserver(
+      new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting) {
-              runTotalRaisedAnimation(totalRaisedTargetValue);
+              runTotalRaisedCountUp(n);
             } else {
               cancelTotalRaisedAnimation();
-              /* Only reset when the section is fully off-screen (avoids stuck $0 on mobile Safari). */
+              /* Reset only when fully off-screen so the next visit can count up again. */
               var r = entry.boundingClientRect;
               var vh = window.innerHeight || document.documentElement.clientHeight;
               if (r.bottom < 0 || r.top > vh) {
@@ -649,30 +646,12 @@
             }
           });
         },
-        { threshold: 0, rootMargin: "40px 0px 40px 0px" }
-      );
-      totalIo.observe(totalRaisedSection);
-      /* IO can miss the first paint; run when already visible after load. */
-      requestAnimationFrame(function () {
-        requestAnimationFrame(runIfInView);
-      });
+        { threshold: 0, rootMargin: "0px 0px 12% 0px" }
+      ).observe(totalRaisedSection);
     } else {
-      runTotalRaisedAnimation(totalRaisedTargetValue);
+      runTotalRaisedCountUp(n);
     }
   }
 
-  fetch("/data/total-raised.json", { cache: "no-store" })
-    .then(function (res) {
-      if (!res.ok) throw new Error("bad");
-      return res.json();
-    })
-    .then(function (data) {
-      var n = parseInt(data.totalUsd, 10);
-      if (isNaN(n) || n < 0) n = TOTAL_RAISED_FALLBACK_USD;
-      var sub = typeof data.subtitle === "string" ? data.subtitle : "";
-      initTotalRaisedDisplay(n, sub);
-    })
-    .catch(function () {
-      initTotalRaisedDisplay(TOTAL_RAISED_FALLBACK_USD, "");
-    });
+  initTotalRaisedFromDom();
 })();

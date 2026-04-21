@@ -697,6 +697,8 @@ html.js .hero-slide.is-active .hero-slide-img {
   margin: 0 0 0.75rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  min-height: 1.15em;
+  flex-wrap: nowrap;
 }
 
 .total-raised-currency {
@@ -714,15 +716,19 @@ html.js .hero-slide.is-active .hero-slide-img {
   font-size: clamp(2.75rem, 8vw, 4.25rem);
   letter-spacing: -0.03em;
   line-height: 1;
+  display: inline-block;
   background: linear-gradient(135deg, var(--bg-deep) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
 @supports not (background-clip: text) {
   .total-raised-number {
+    background: none;
     color: var(--bg-deep);
+    -webkit-text-fill-color: currentColor;
   }
 }
 

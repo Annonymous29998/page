@@ -28,15 +28,6 @@
       ]
     },
     {
-      "source": "/data/total-raised.json",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=120, must-revalidate"
-        }
-      ]
-    },
-    {
       "source": "/images/:path*",
       "headers": [
         {
