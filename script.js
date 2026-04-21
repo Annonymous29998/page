@@ -561,15 +561,46 @@
     headerObs.observe(heroSection);
   }
 
-  /* Total raised: data-total-usd on #total-raised; styles are inline in HTML */
-  var TOTAL_RAISED_DEFAULT_USD = 10000;
+  /* Total raised: schedule in HTML — data-total-base-usd, data-total-base-date (YYYY-MM-DD), data-total-step-usd, data-total-step-days */
+  var TOTAL_RAISED_FALLBACK_BASE_USD = 10000;
   var totalRaisedSection = document.getElementById("total-raised");
   var totalRaisedNumberEl = document.getElementById("total-raised-number");
   var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
   var totalRaisedRafId = null;
+  var MS_PER_DAY = 86400000;
 
   function formatUsdInteger(num) {
     return Math.max(0, Math.round(Number(num))).toLocaleString("en-US");
+  }
+
+  function parseLocalDateYmd(str) {
+    var s = (str || "").trim();
+    var p = s.split("-");
+    if (p.length !== 3) return null;
+    var y = parseInt(p[0], 10);
+    var m = parseInt(p[1], 10) - 1;
+    var d = parseInt(p[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    var dt = new Date(y, m, d, 0, 0, 0, 0);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return null;
+    return dt;
+  }
+
+  function getScheduleTotalRaisedUsd(section) {
+    if (!section) return TOTAL_RAISED_FALLBACK_BASE_USD;
+    var baseUsd = parseInt(section.getAttribute("data-total-base-usd"), 10);
+    if (isNaN(baseUsd) || baseUsd < 0) baseUsd = TOTAL_RAISED_FALLBACK_BASE_USD;
+    var stepUsd = parseInt(section.getAttribute("data-total-step-usd"), 10);
+    if (isNaN(stepUsd) || stepUsd < 0) stepUsd = 300;
+    var stepDays = parseFloat(section.getAttribute("data-total-step-days"), 10);
+    if (isNaN(stepDays) || stepDays <= 0) stepDays = 2;
+    var baseDay = parseLocalDateYmd(section.getAttribute("data-total-base-date"));
+    if (!baseDay) return baseUsd;
+    var elapsed = Date.now() - baseDay.getTime();
+    if (elapsed < 0) return baseUsd;
+    var stepMs = stepDays * MS_PER_DAY;
+    var periods = Math.floor(elapsed / stepMs);
+    return baseUsd + periods * stepUsd;
   }
 
   function cancelTotalRaisedAnimation() {
@@ -613,9 +644,6 @@
 
   function initTotalRaisedFromDom() {
     if (!totalRaisedSection || !totalRaisedNumberEl) return;
-    var raw = totalRaisedSection.getAttribute("data-total-usd");
-    var n = parseInt(raw, 10);
-    if (isNaN(n) || n < 0) n = TOTAL_RAISED_DEFAULT_USD;
     var sub = totalRaisedSection.getAttribute("data-total-subtitle");
     if (totalRaisedSubtitleEl && sub && sub.trim()) {
       totalRaisedSubtitleEl.textContent = sub.trim();
@@ -625,7 +653,7 @@
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion) {
-      totalRaisedNumberEl.textContent = formatUsdInteger(n);
+      totalRaisedNumberEl.textContent = formatUsdInteger(getScheduleTotalRaisedUsd(totalRaisedSection));
       return;
     }
 
@@ -634,7 +662,7 @@
         function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting) {
-              runTotalRaisedCountUp(n);
+              runTotalRaisedCountUp(getScheduleTotalRaisedUsd(totalRaisedSection));
             } else {
               cancelTotalRaisedAnimation();
               var r = entry.boundingClientRect;
@@ -648,7 +676,7 @@
         { threshold: 0, rootMargin: "0px 0px 12% 0px" }
       ).observe(totalRaisedSection);
     } else {
-      runTotalRaisedCountUp(n);
+      runTotalRaisedCountUp(getScheduleTotalRaisedUsd(totalRaisedSection));
     }
   }
 
