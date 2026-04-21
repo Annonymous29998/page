@@ -24,7 +24,6 @@
   var navToggle = document.querySelector(".nav-toggle");
   var navPanel = document.getElementById("nav-panel");
   var donateForm = document.getElementById("donate-form");
-  var formMessage = document.getElementById("form-message");
   var customWrap = document.getElementById("custom-amount-wrap");
   var customInput = document.getElementById("custom-amount");
   var paymentDialog = document.getElementById("payment-dialog");
@@ -209,10 +208,9 @@
   function openPaymentDialog(amountNumber) {
     if (!paymentDialog || !paymentDialogAmount) return;
     if (typeof paymentDialog.showModal !== "function") {
-      if (formMessage) {
-        formMessage.textContent =
-          "Your browser doesn’t support payment dialogs. Please try a current version of Chrome, Safari, or Firefox.";
-      }
+      window.alert(
+        "Your browser doesn’t support payment dialogs. Please try a current version of Chrome, Safari, or Firefox."
+      );
       return;
     }
     paymentDialogAmount.textContent = "Gift amount: " + formatMoney(amountNumber);
@@ -252,18 +250,14 @@
           !pendingDonorEmail ||
           !pendingDonorAmountFormatted
         ) {
-          if (formMessage) {
-            formMessage.textContent =
-              "Something went wrong. Please close the window and submit the form again.";
-          }
+          window.alert("Something went wrong. Please close the window and submit the form again.");
           return;
         }
 
         if (!DONATION_FORM_ENDPOINT || !DONATION_FORM_ENDPOINT.trim()) {
-          if (formMessage) {
-            formMessage.textContent =
-              "Online donations are not available at the moment. Please try again later or contact the organizer.";
-          }
+          window.alert(
+            "Online donations are not available at the moment. Please try again later or contact the organizer."
+          );
           return;
         }
 
@@ -278,10 +272,6 @@
           .then(function () {
             closePaymentDialog();
             openWhatsAppWithDonation();
-            if (formMessage) {
-              formMessage.textContent =
-                "Details sent. Opening WhatsApp to complete your gift.";
-            }
             if (donateForm) {
               donateForm.reset();
               var defaultRadio = donateForm.querySelector(
@@ -293,10 +283,9 @@
             clearPendingDonor();
           })
           .catch(function () {
-            if (formMessage) {
-              formMessage.textContent =
-                "We couldn’t send your details. Check your connection and tap your payment method again.";
-            }
+            window.alert(
+              "We couldn’t send your details. Check your connection and tap your payment method again."
+            );
           })
           .then(function () {
             setPaymentDialogBusy(false);
@@ -316,40 +305,38 @@
         if (r.checked) selectedAmount = r.value;
       });
 
-      if (formMessage) {
-        formMessage.textContent = "";
+      if (customInput) {
+        customInput.setCustomValidity("");
       }
 
-      if (!name.value.trim() || !email.value.trim()) {
-        if (formMessage) {
-          formMessage.textContent = "Please fill in your name and email.";
-        }
+      if (!donateForm.checkValidity()) {
+        donateForm.reportValidity();
         return;
       }
 
       if (selectedAmount === "custom") {
         var n = parseFloat(customInput.value, 10);
         if (!n || n < MIN_DONATION_USD) {
-          if (formMessage) {
-            formMessage.textContent =
-              "Enter a custom amount of at least $" + MIN_DONATION_USD + ".";
-          }
+          customInput.setCustomValidity(
+            "Enter a custom amount of at least $" + MIN_DONATION_USD + "."
+          );
+          customInput.reportValidity();
+          customInput.setCustomValidity("");
           return;
         }
       } else {
         var preset = parseFloat(selectedAmount, 10);
         if (!isNaN(preset) && preset < MIN_DONATION_USD) {
-          if (formMessage) {
-            formMessage.textContent = "Please choose an amount of at least $" + MIN_DONATION_USD + ".";
-          }
           return;
         }
       }
 
       var amountValue = getSelectedDonationAmountValue();
       if (amountValue === null || amountValue < MIN_DONATION_USD) {
-        if (formMessage) {
-          formMessage.textContent = "Please enter a valid donation amount.";
+        if (selectedAmount === "custom" && customInput) {
+          customInput.setCustomValidity("Please enter a valid donation amount.");
+          customInput.reportValidity();
+          customInput.setCustomValidity("");
         }
         return;
       }
@@ -362,9 +349,6 @@
       pendingDonorEmail = emailStr;
       pendingDonorAmountFormatted = amountFormatted;
       openPaymentDialog(amountValue);
-      if (formMessage) {
-        formMessage.textContent = "Choose how you’d like to pay. Your details will be sent after you pick a method.";
-      }
     });
   }
 

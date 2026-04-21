@@ -1000,13 +1000,6 @@ html.js .hero-slide.is-active .hero-slide-img {
   accent-color: var(--accent);
 }
 
-.form-footnote {
-  margin: 16px 0 0;
-  font-size: 0.875rem;
-  color: var(--accent);
-  min-height: 1.25em;
-}
-
 /* Payment method dialog */
 .payment-dialog {
   padding: 0;
