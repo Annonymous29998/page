@@ -612,12 +612,25 @@
     totalRaisedRafId = requestAnimationFrame(frame);
   }
 
+  function totalRaisedIsInView() {
+    if (!totalRaisedSection) return false;
+    var r = totalRaisedSection.getBoundingClientRect();
+    var h = window.innerHeight || document.documentElement.clientHeight;
+    return r.top < h && r.bottom > 0;
+  }
+
   function initTotalRaisedDisplay(totalUsd, subtitle) {
     totalRaisedTargetValue = totalUsd;
     if (totalRaisedSubtitleEl && subtitle) {
       totalRaisedSubtitleEl.textContent = subtitle;
     }
     if (!totalRaisedSection || !totalRaisedNumberEl) return;
+
+    function runIfInView() {
+      if (totalRaisedIsInView()) {
+        runTotalRaisedAnimation(totalRaisedTargetValue);
+      }
+    }
 
     if ("IntersectionObserver" in window) {
       var totalIo = new IntersectionObserver(
@@ -627,13 +640,22 @@
               runTotalRaisedAnimation(totalRaisedTargetValue);
             } else {
               cancelTotalRaisedAnimation();
-              totalRaisedNumberEl.textContent = formatUsdInteger(0);
+              /* Only reset when the section is fully off-screen (avoids stuck $0 on mobile Safari). */
+              var r = entry.boundingClientRect;
+              var vh = window.innerHeight || document.documentElement.clientHeight;
+              if (r.bottom < 0 || r.top > vh) {
+                totalRaisedNumberEl.textContent = formatUsdInteger(0);
+              }
             }
           });
         },
-        { threshold: 0.12, rootMargin: "0px" }
+        { threshold: 0, rootMargin: "40px 0px 40px 0px" }
       );
       totalIo.observe(totalRaisedSection);
+      /* IO can miss the first paint; run when already visible after load. */
+      requestAnimationFrame(function () {
+        requestAnimationFrame(runIfInView);
+      });
     } else {
       runTotalRaisedAnimation(totalRaisedTargetValue);
     }
