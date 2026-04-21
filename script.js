@@ -560,4 +560,97 @@
     );
     headerObs.observe(heroSection);
   }
+
+  /* Total raised: data-total-usd on #total-raised; styles are inline in HTML */
+  var TOTAL_RAISED_DEFAULT_USD = 10000;
+  var totalRaisedSection = document.getElementById("total-raised");
+  var totalRaisedNumberEl = document.getElementById("total-raised-number");
+  var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
+  var totalRaisedRafId = null;
+
+  function formatUsdInteger(num) {
+    return Math.max(0, Math.round(Number(num))).toLocaleString("en-US");
+  }
+
+  function cancelTotalRaisedAnimation() {
+    if (totalRaisedRafId !== null) {
+      cancelAnimationFrame(totalRaisedRafId);
+      totalRaisedRafId = null;
+    }
+  }
+
+  function runTotalRaisedCountUp(target) {
+    if (!totalRaisedNumberEl) return;
+    cancelTotalRaisedAnimation();
+
+    var reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion || target <= 0) {
+      totalRaisedNumberEl.textContent = formatUsdInteger(target);
+      return;
+    }
+
+    var duration = 900;
+    var startTs = null;
+
+    function frame(ts) {
+      if (startTs === null) startTs = ts;
+      var t = Math.min((ts - startTs) / duration, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      var val = Math.round(target * eased);
+      totalRaisedNumberEl.textContent = formatUsdInteger(val);
+      if (t < 1) {
+        totalRaisedRafId = requestAnimationFrame(frame);
+      } else {
+        totalRaisedRafId = null;
+      }
+    }
+
+    totalRaisedNumberEl.textContent = formatUsdInteger(0);
+    totalRaisedRafId = requestAnimationFrame(frame);
+  }
+
+  function initTotalRaisedFromDom() {
+    if (!totalRaisedSection || !totalRaisedNumberEl) return;
+    var raw = totalRaisedSection.getAttribute("data-total-usd");
+    var n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0) n = TOTAL_RAISED_DEFAULT_USD;
+    var sub = totalRaisedSection.getAttribute("data-total-subtitle");
+    if (totalRaisedSubtitleEl && sub && sub.trim()) {
+      totalRaisedSubtitleEl.textContent = sub.trim();
+    }
+
+    var reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      totalRaisedNumberEl.textContent = formatUsdInteger(n);
+      return;
+    }
+
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              runTotalRaisedCountUp(n);
+            } else {
+              cancelTotalRaisedAnimation();
+              var r = entry.boundingClientRect;
+              var vh = window.innerHeight || document.documentElement.clientHeight;
+              if (r.bottom < 0 || r.top > vh) {
+                totalRaisedNumberEl.textContent = formatUsdInteger(0);
+              }
+            }
+          });
+        },
+        { threshold: 0, rootMargin: "0px 0px 12% 0px" }
+      ).observe(totalRaisedSection);
+    } else {
+      runTotalRaisedCountUp(n);
+    }
+  }
+
+  initTotalRaisedFromDom();
 })();
