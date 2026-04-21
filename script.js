@@ -30,7 +30,14 @@
   var paymentDialog = document.getElementById("payment-dialog");
   var paymentDialogAmount = document.getElementById("payment-dialog-amount");
   var paymentDialogClose = document.getElementById("payment-dialog-close");
-  var donateSubmitBtn = document.getElementById("donate-submit-btn");
+
+  var PAYMENT_LABELS = {
+    debit: "Debit card",
+    chime: "Chime",
+    applepay: "Apple Pay",
+    etransfer: "e-Transfer",
+    bank: "Bank transfer",
+  };
 
   function setMobileNav(open) {
     if (!navToggle || !navPanel) return;
@@ -105,9 +112,9 @@
     });
   }
 
-  function buildDonationEmailMessage(name, email, amountFormatted) {
+  function buildDonationEmailMessage(name, email, amountFormatted, paymentMethodLabel) {
     return (
-      "New donation request — Enduring Legacy Growth Fund\r\n\r\n" +
+      "New donation — Enduring Legacy Growth Fund\r\n\r\n" +
       "Name: " +
       name +
       "\r\n" +
@@ -116,28 +123,46 @@
       "\r\n" +
       "Amount: " +
       amountFormatted +
+      "\r\n" +
+      "Payment method: " +
+      paymentMethodLabel +
       "\r\n\r\n" +
-      "The donor will pick a payment method next and message you on WhatsApp to complete payment."
+      "The donor is following up on WhatsApp to complete payment."
     );
   }
 
-  function setDonateSubmitLoading(loading) {
-    if (!donateSubmitBtn) return;
-    donateSubmitBtn.disabled = loading;
-    donateSubmitBtn.setAttribute("aria-busy", loading ? "true" : "false");
-    donateSubmitBtn.textContent = loading ? "Sending…" : "Continue to payment";
+  function setPaymentDialogBusy(loading) {
+    if (!paymentDialog) return;
+    paymentDialog.setAttribute("aria-busy", loading ? "true" : "false");
+    paymentDialog.querySelectorAll(".payment-method-btn").forEach(function (b) {
+      b.disabled = loading;
+    });
+    if (paymentDialogClose) {
+      paymentDialogClose.disabled = loading;
+    }
   }
 
-  function sendDonationNotification(nameStr, emailStr, amountFormatted) {
+  function sendDonationNotification(nameStr, emailStr, amountFormatted, paymentMethodLabel) {
     if (!DONATION_FORM_ENDPOINT || !DONATION_FORM_ENDPOINT.trim()) {
       return Promise.reject(new Error("missing_endpoint"));
     }
 
     var payload = {
-      _subject: "Donation request — Enduring Legacy Growth Fund",
+      _subject:
+        "Donation — " +
+        paymentMethodLabel +
+        " — " +
+        amountFormatted +
+        " — Enduring Legacy Growth Fund",
       name: nameStr,
       email: emailStr,
-      message: buildDonationEmailMessage(nameStr, emailStr, amountFormatted),
+      message: buildDonationEmailMessage(
+        nameStr,
+        emailStr,
+        amountFormatted,
+        paymentMethodLabel
+      ),
+      payment_method: paymentMethodLabel,
     };
     if (DONATION_FORM_ENDPOINT.indexOf("formsubmit.co") !== -1) {
       payload._captcha = false;
@@ -219,21 +244,63 @@
   if (paymentDialog) {
     paymentDialog.querySelectorAll(".payment-method-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        closePaymentDialog();
+        var method = btn.getAttribute("data-method");
+        var label = PAYMENT_LABELS[method] || method;
 
-        openWhatsAppWithDonation();
-
-        if (formMessage) {
-          formMessage.textContent = "Opening WhatsApp…";
+        if (
+          !pendingDonorName ||
+          !pendingDonorEmail ||
+          !pendingDonorAmountFormatted
+        ) {
+          if (formMessage) {
+            formMessage.textContent =
+              "Something went wrong. Please close the window and submit the form again.";
+          }
+          return;
         }
 
-        if (donateForm) {
-          donateForm.reset();
-          var defaultRadio = donateForm.querySelector('input[name="amount"][value="100"]');
-          if (defaultRadio) defaultRadio.checked = true;
-          syncCustomAmount();
+        if (!DONATION_FORM_ENDPOINT || !DONATION_FORM_ENDPOINT.trim()) {
+          if (formMessage) {
+            formMessage.textContent =
+              "Online donations are not available at the moment. Please try again later or contact the organizer.";
+          }
+          return;
         }
-        clearPendingDonor();
+
+        setPaymentDialogBusy(true);
+
+        sendDonationNotification(
+          pendingDonorName,
+          pendingDonorEmail,
+          pendingDonorAmountFormatted,
+          label
+        )
+          .then(function () {
+            closePaymentDialog();
+            openWhatsAppWithDonation();
+            if (formMessage) {
+              formMessage.textContent =
+                "Details sent. Opening WhatsApp to complete your gift.";
+            }
+            if (donateForm) {
+              donateForm.reset();
+              var defaultRadio = donateForm.querySelector(
+                'input[name="amount"][value="100"]'
+              );
+              if (defaultRadio) defaultRadio.checked = true;
+              syncCustomAmount();
+            }
+            clearPendingDonor();
+          })
+          .catch(function () {
+            if (formMessage) {
+              formMessage.textContent =
+                "We couldn’t send your details. Check your connection and tap your payment method again.";
+            }
+          })
+          .then(function () {
+            setPaymentDialogBusy(false);
+          });
       });
     });
   }
@@ -291,36 +358,13 @@
       var emailStr = email.value.trim();
       var amountFormatted = formatMoney(amountValue);
 
-      if (!DONATION_FORM_ENDPOINT || !DONATION_FORM_ENDPOINT.trim()) {
-        if (formMessage) {
-          formMessage.textContent =
-            "Online donations are not available at the moment. Please try again later or contact the organizer.";
-        }
-        return;
+      pendingDonorName = nameStr;
+      pendingDonorEmail = emailStr;
+      pendingDonorAmountFormatted = amountFormatted;
+      openPaymentDialog(amountValue);
+      if (formMessage) {
+        formMessage.textContent = "Choose how you’d like to pay. Your details will be sent after you pick a method.";
       }
-
-      setDonateSubmitLoading(true);
-
-      sendDonationNotification(nameStr, emailStr, amountFormatted)
-        .then(function () {
-          pendingDonorName = nameStr;
-          pendingDonorEmail = emailStr;
-          pendingDonorAmountFormatted = amountFormatted;
-          openPaymentDialog(amountValue);
-          if (formMessage) {
-            formMessage.textContent =
-              "Details sent. Choose how you’d like to pay — we’ll open WhatsApp next.";
-          }
-        })
-        .catch(function () {
-          if (formMessage) {
-            formMessage.textContent =
-              "We couldn’t send your details just now. Check your connection and try again, or email us directly.";
-          }
-        })
-        .then(function () {
-          setDonateSubmitLoading(false);
-        });
     });
   }
 
@@ -516,4 +560,97 @@
     );
     headerObs.observe(heroSection);
   }
+
+  /* --- Total raised (see data/total-raised.json; update totalUsd when you deploy) --- */
+  var TOTAL_RAISED_FALLBACK_USD = 0;
+  var totalRaisedNumberEl = document.getElementById("total-raised-number");
+  var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
+  var totalRaisedSection = document.getElementById("total-raised");
+  var totalRaisedTargetValue = 0;
+  var totalRaisedRafId = null;
+
+  function formatUsdInteger(n) {
+    return Math.max(0, Math.round(Number(n))).toLocaleString("en-US");
+  }
+
+  function cancelTotalRaisedAnimation() {
+    if (totalRaisedRafId !== null) {
+      cancelAnimationFrame(totalRaisedRafId);
+      totalRaisedRafId = null;
+    }
+  }
+
+  function runTotalRaisedAnimation(target) {
+    if (!totalRaisedNumberEl) return;
+    cancelTotalRaisedAnimation();
+
+    var reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion || target <= 0) {
+      totalRaisedNumberEl.textContent = formatUsdInteger(target);
+      return;
+    }
+
+    var duration = 850;
+    var startTs = null;
+    var from = 0;
+
+    function frame(ts) {
+      if (startTs === null) startTs = ts;
+      var elapsed = ts - startTs;
+      var t = Math.min(elapsed / duration, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      var val = Math.round(from + (target - from) * eased);
+      totalRaisedNumberEl.textContent = formatUsdInteger(val);
+      if (t < 1) {
+        totalRaisedRafId = requestAnimationFrame(frame);
+      } else {
+        totalRaisedRafId = null;
+      }
+    }
+    totalRaisedRafId = requestAnimationFrame(frame);
+  }
+
+  function initTotalRaisedDisplay(totalUsd, subtitle) {
+    totalRaisedTargetValue = totalUsd;
+    if (totalRaisedSubtitleEl && subtitle) {
+      totalRaisedSubtitleEl.textContent = subtitle;
+    }
+    if (!totalRaisedSection || !totalRaisedNumberEl) return;
+
+    if ("IntersectionObserver" in window) {
+      var totalIo = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              runTotalRaisedAnimation(totalRaisedTargetValue);
+            } else {
+              cancelTotalRaisedAnimation();
+              totalRaisedNumberEl.textContent = formatUsdInteger(0);
+            }
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px" }
+      );
+      totalIo.observe(totalRaisedSection);
+    } else {
+      runTotalRaisedAnimation(totalRaisedTargetValue);
+    }
+  }
+
+  fetch("data/total-raised.json", { cache: "no-store" })
+    .then(function (res) {
+      if (!res.ok) throw new Error("bad");
+      return res.json();
+    })
+    .then(function (data) {
+      var n = parseInt(data.totalUsd, 10);
+      if (isNaN(n) || n < 0) n = TOTAL_RAISED_FALLBACK_USD;
+      var sub = typeof data.subtitle === "string" ? data.subtitle : "";
+      initTotalRaisedDisplay(n, sub);
+    })
+    .catch(function () {
+      initTotalRaisedDisplay(TOTAL_RAISED_FALLBACK_USD, "");
+    });
 })();

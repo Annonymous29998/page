@@ -647,6 +647,102 @@ html.js .hero-slide.is-active .hero-slide-img {
   margin: 0;
 }
 
+/* Total raised counter */
+.section-total-raised {
+  padding: clamp(2.5rem, 6vw, 3.5rem) 0;
+  background: linear-gradient(
+    165deg,
+    rgba(26, 35, 50, 0.06) 0%,
+    rgba(196, 92, 38, 0.08) 50%,
+    rgba(201, 162, 39, 0.06) 100%
+  );
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.total-raised-card {
+  text-align: center;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: clamp(1.75rem, 5vw, 2.5rem) clamp(1.25rem, 4vw, 2rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.total-raised-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.total-raised-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 700;
+  color: var(--bg-deep);
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+}
+
+.total-raised-value {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.12rem;
+  margin: 0 0 0.75rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.total-raised-currency {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 0.45rem;
+  opacity: 0.95;
+}
+
+.total-raised-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.75rem, 8vw, 4.25rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@supports not (background-clip: text) {
+  .total-raised-number {
+    color: var(--bg-deep);
+  }
+}
+
+.total-raised-subtitle {
+  margin: 0 0 1rem;
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.total-raised-note {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .donate-heartfelt {
   font-size: 1.05rem;
   line-height: 1.6;
@@ -1118,6 +1214,17 @@ html.js .hero-slide.is-active .hero-slide-img {
 
 .payment-method-btn:active {
   transform: scale(0.99);
+}
+
+.payment-method-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.payment-dialog[aria-busy="true"] .payment-dialog-close:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 .payment-method-btn:focus-visible {
