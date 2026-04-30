@@ -123,7 +123,7 @@
       id="total-raised"
       class="section"
       aria-labelledby="total-raised-heading"
-      data-total-base-usd="10000"
+      data-total-base-usd="20000"
       data-total-base-date="2026-04-19"
       data-total-step-usd="300"
       data-total-step-days="2"
@@ -147,7 +147,7 @@
             <span
               id="total-raised-number"
               style="font-family: var(--font-display); font-weight: 700; font-size: clamp(2.75rem, 8vw, 4.25rem); letter-spacing: -0.03em; line-height: 1; display: inline-block; background: linear-gradient(135deg, var(--bg-deep) 0%, var(--accent) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;"
-              >10,300</span>
+              >20,300</span>
           </p>
           <p id="total-raised-subtitle" style="margin: 0 0 1rem; font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; color: var(--text);">
             Raised together for youth baseball &amp; cancer research
@@ -290,6 +290,10 @@
             <span>Email</span>
             <input type="email" name="email" id="donor-email" autocomplete="email" required />
           </label>
+          <label class="field">
+            <span>Phone</span>
+            <input type="tel" name="phone" id="donor-phone" autocomplete="tel" inputmode="tel" required />
+          </label>
           <label class="field checkbox-field">
             <input type="checkbox" name="updates" id="donor-updates" />
             <span>Send me occasional updates about this project</span>
@@ -350,6 +354,6 @@
     </div>
   </dialog>
 
-  <script src="script.js?v=20260422" defer></script>
+  <script src="script.js?v=20260424" defer></script>
 </body>
 </html>
