@@ -217,7 +217,20 @@
       url = "https://wa.me/?text=" + encodeURIComponent(msg);
     }
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    /* iOS Safari (and many mobile browsers) block window.open() after async fetch — same-tab navigation works. */
+    var ua = navigator.userAgent || "";
+    var isIOS =
+      /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isAndroidMobile = /Android/i.test(ua) && /Mobile/i.test(ua);
+    if (isIOS || isAndroidMobile) {
+      window.location.href = url;
+      return;
+    }
+    var win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win) {
+      window.location.href = url;
+    }
   }
 
   function clearPendingDonor() {
