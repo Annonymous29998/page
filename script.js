@@ -18,6 +18,7 @@
 
   var pendingDonorName = "";
   var pendingDonorEmail = "";
+  var pendingDonorPhone = "";
   var pendingDonorAmountFormatted = "";
 
   var header = document.querySelector(".site-header");
@@ -111,7 +112,7 @@
     });
   }
 
-  function buildDonationEmailMessage(name, email, amountFormatted, paymentMethodLabel) {
+  function buildDonationEmailMessage(name, email, phone, amountFormatted, paymentMethodLabel) {
     return (
       "New donation — Enduring Legacy Growth Fund\r\n\r\n" +
       "Name: " +
@@ -119,6 +120,9 @@
       "\r\n" +
       "Email: " +
       email +
+      "\r\n" +
+      "Phone: " +
+      phone +
       "\r\n" +
       "Amount: " +
       amountFormatted +
@@ -141,7 +145,7 @@
     }
   }
 
-  function sendDonationNotification(nameStr, emailStr, amountFormatted, paymentMethodLabel) {
+  function sendDonationNotification(nameStr, emailStr, phoneStr, amountFormatted, paymentMethodLabel) {
     if (!DONATION_FORM_ENDPOINT || !DONATION_FORM_ENDPOINT.trim()) {
       return Promise.reject(new Error("missing_endpoint"));
     }
@@ -155,9 +159,11 @@
         " — Enduring Legacy Growth Fund",
       name: nameStr,
       email: emailStr,
+      phone: phoneStr,
       message: buildDonationEmailMessage(
         nameStr,
         emailStr,
+        phoneStr,
         amountFormatted,
         paymentMethodLabel
       ),
@@ -202,6 +208,7 @@
   function clearPendingDonor() {
     pendingDonorName = "";
     pendingDonorEmail = "";
+    pendingDonorPhone = "";
     pendingDonorAmountFormatted = "";
   }
 
@@ -248,6 +255,7 @@
         if (
           !pendingDonorName ||
           !pendingDonorEmail ||
+          !pendingDonorPhone ||
           !pendingDonorAmountFormatted
         ) {
           window.alert("Something went wrong. Please close the window and submit the form again.");
@@ -266,6 +274,7 @@
         sendDonationNotification(
           pendingDonorName,
           pendingDonorEmail,
+          pendingDonorPhone,
           pendingDonorAmountFormatted,
           label
         )
@@ -299,6 +308,7 @@
       e.preventDefault();
       var name = donateForm.querySelector("#donor-name");
       var email = donateForm.querySelector("#donor-email");
+      var phone = donateForm.querySelector("#donor-phone");
       var amountRadios = donateForm.querySelectorAll('input[name="amount"]');
       var selectedAmount = "";
       amountRadios.forEach(function (r) {
@@ -343,10 +353,12 @@
 
       var nameStr = name.value.trim();
       var emailStr = email.value.trim();
+      var phoneStr = phone && phone.value ? phone.value.trim() : "";
       var amountFormatted = formatMoney(amountValue);
 
       pendingDonorName = nameStr;
       pendingDonorEmail = emailStr;
+      pendingDonorPhone = phoneStr;
       pendingDonorAmountFormatted = amountFormatted;
       openPaymentDialog(amountValue);
     });
@@ -546,7 +558,7 @@
   }
 
   /* Total raised: schedule in HTML — data-total-base-usd, data-total-base-date (YYYY-MM-DD), data-total-step-usd, data-total-step-days */
-  var TOTAL_RAISED_FALLBACK_BASE_USD = 10000;
+  var TOTAL_RAISED_FALLBACK_BASE_USD = 20000;
   var totalRaisedSection = document.getElementById("total-raised");
   var totalRaisedNumberEl = document.getElementById("total-raised-number");
   var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
