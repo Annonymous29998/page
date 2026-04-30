@@ -8,7 +8,7 @@
   ];
   var HERO_INTERVAL_MS = 6500;
   var HERO_SWIPE_MIN_PX = 48;
-  var MIN_DONATION_USD = 100;
+  var MIN_DONATION_USD = 200;
 
   /* FormSubmit: confirm the activation email the first time a submission arrives. */
   var DONATION_FORM_ENDPOINT =
@@ -182,18 +182,33 @@
       body: JSON.stringify(payload),
     }).then(function (res) {
       if (!res.ok) {
-        throw new Error("notify_failed");
+        throw new Error("http_" + (res.status || 0));
       }
       return res;
     });
   }
 
-  function openWhatsAppWithDonation() {
+  function openWhatsAppWithDonation(paymentMethodLabel) {
     var num = (WHATSAPP_ADMIN_NUMBER || "").replace(/\D/g, "");
+    var methodLine =
+      paymentMethodLabel && String(paymentMethodLabel).trim()
+        ? "Payment method: " + String(paymentMethodLabel).trim()
+        : "Payment method: (see email)";
     var msg =
-      "Hello — I’d like to make a donation of " +
-      pendingDonorAmountFormatted +
-      " for the Enduring Legacy Growth Fund.\r\n\r\n";
+      "Hello — I’m completing my donation to the Enduring Legacy Growth Fund.\r\n\r\n" +
+      "Name: " +
+      (pendingDonorName || "").trim() +
+      "\r\n" +
+      "Email: " +
+      (pendingDonorEmail || "").trim() +
+      "\r\n" +
+      "Phone: " +
+      (pendingDonorPhone || "").trim() +
+      "\r\n" +
+      "Amount: " +
+      (pendingDonorAmountFormatted || "").trim() +
+      "\r\n" +
+      methodLine;
 
     var url;
     if (num.length >= 8) {
@@ -280,21 +295,42 @@
         )
           .then(function () {
             closePaymentDialog();
-            openWhatsAppWithDonation();
+            openWhatsAppWithDonation(label);
             if (donateForm) {
               donateForm.reset();
               var defaultRadio = donateForm.querySelector(
-                'input[name="amount"][value="100"]'
+                'input[name="amount"][value="200"]'
               );
               if (defaultRadio) defaultRadio.checked = true;
               syncCustomAmount();
             }
             clearPendingDonor();
           })
-          .catch(function () {
-            window.alert(
-              "We couldn’t send your details. Check your connection and tap your payment method again."
-            );
+          .catch(function (err) {
+            var httpErr = err && err.message && String(err.message).indexOf("http_") === 0;
+            var help =
+              "The site could not finish the secure request to the email service. " +
+              "That often happens because of antivirus “HTTPS scanning,” a VPN, workplace Wi‑Fi, or a strict privacy browser — not because your Wi‑Fi is “off.”\n\n" +
+              "Try: phone on mobile data, turn off VPN, or temporarily pause web shield / SSL scanning in security software. Then tap your payment method again.\n\n" +
+              "You can also open WhatsApp and send your details there (your full message will be filled in).";
+            if (httpErr) {
+              help =
+                "The email service returned an error. Wait a few minutes and try again, or use WhatsApp below to send your details.";
+            }
+            var openWa = window.confirm(help + "\n\nOpen WhatsApp now with your details filled in?");
+            if (openWa) {
+              closePaymentDialog();
+              openWhatsAppWithDonation(label);
+              if (donateForm) {
+                donateForm.reset();
+                var defaultRadio = donateForm.querySelector(
+                  'input[name="amount"][value="200"]'
+                );
+                if (defaultRadio) defaultRadio.checked = true;
+                syncCustomAmount();
+              }
+              clearPendingDonor();
+            }
           })
           .then(function () {
             setPaymentDialogBusy(false);
