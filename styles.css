@@ -948,12 +948,23 @@ html.js .hero-slide.is-active .hero-slide-img {
   font-size: 1rem;
   border: 2px solid var(--line);
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--surface);
+  color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .custom-amount-wrap input:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.custom-amount-wrap input::-webkit-outer-spin-button,
+.custom-amount-wrap input::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button;
+  opacity: 1;
+  margin: 0;
 }
 
 .field {
@@ -970,13 +981,30 @@ html.js .hero-slide.is-active .hero-slide-img {
 }
 
 .field input[type="text"],
-.field input[type="email"] {
+.field input[type="email"],
+.field input[type="tel"],
+.field input[type="number"] {
   width: 100%;
   padding: 12px 14px;
   font-family: inherit;
   font-size: 1rem;
   border: 2px solid var(--line);
   border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.field input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.field input[type="number"]::-webkit-outer-spin-button,
+.field input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button;
+  opacity: 1;
+  height: 1.5rem;
 }
 
 .field input:focus {
