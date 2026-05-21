@@ -607,7 +607,7 @@
   }
 
   /* Total raised: schedule in HTML — data-total-base-usd, data-total-base-date (YYYY-MM-DD), data-total-step-usd, data-total-step-days */
-  var TOTAL_RAISED_FALLBACK_BASE_USD = 20000;
+  var TOTAL_RAISED_FALLBACK_BASE_USD = 50000;
   var totalRaisedSection = document.getElementById("total-raised");
   var totalRaisedNumberEl = document.getElementById("total-raised-number");
   var totalRaisedSubtitleEl = document.getElementById("total-raised-subtitle");
